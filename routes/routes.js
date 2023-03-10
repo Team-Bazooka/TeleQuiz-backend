@@ -6,7 +6,7 @@ const quizController = require("../controllers/QuizController");
 router.post("/submit", userController.submitQuiz);
 
 // Quiz routes
-router.post("/quiz/add", quizController.addQuiz);
+router.post("/quize/add", quizController.addQuiz);
 
 router.get("/quize/get", quizController.getQuiz);
 
