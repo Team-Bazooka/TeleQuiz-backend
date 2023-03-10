@@ -1,5 +1,4 @@
 const { PrismaClient } = require("@prisma/client");
-const quizUtils = require("../utils/QuizUtils");
 const quizController = {};
 const prisma = new PrismaClient();
 
