@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model admin {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  fname         String   @db.VarChar(255)
+  lastname      String   @db.VarChar(255)
+  email         String   @db.VarChar(255)
+  username      String   @db.VarChar(255)
+  password      String   @db.VarChar(255)
+  registered_at DateTime @db.Date
+}
+
+model question {
+  id       Int       @id @default(autoincrement()) @db.UnsignedInt
+  quiz_id  Int
+  content  String    @db.VarChar(255)
+  language String    @db.VarChar(255)
+  quiz     quiz      @relation(fields: [id], references: [id], onUpdate: Restrict, map: "question_quiz_id_foreign")
+  usedtime usedtime?
+}
+
+model quiz {
+  id                  Int         @id @default(autoincrement()) @db.UnsignedInt
+  number_of_questions Int
+  views               BigInt
+  tag                 String      @db.VarChar(255)
+  created_at          DateTime    @db.Date
+  question            question?
+  scoreboard          scoreboard?
+}
+
+model scoreboard {
+  id      Int  @id @default(autoincrement()) @db.UnsignedInt
+  user_id Int
+  point   Int
+  quiz_id Int
+  quiz    quiz @relation(fields: [id], references: [id], onUpdate: Restrict, map: "scoreboard_quiz_id_foreign")
+  user    user @relation(fields: [id], references: [id], onUpdate: Restrict, map: "scoreboard_user_id_foreign")
+}
+
+model usedtime {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id     Int
+  question_id Int
+  time        DateTime @db.Date
+  question    question @relation(fields: [id], references: [id], onUpdate: Restrict, map: "usedtime_question_id_foreign")
+  user        user     @relation(fields: [id], references: [id], onUpdate: Restrict, map: "usedtime_user_id_foreign")
+}
+
+model user {
+  id                    Int         @id @default(autoincrement()) @db.UnsignedInt
+  telegram_id           BigInt
+  username              String      @db.VarChar(255)
+  number_of_quiz        Int
+  number_of_shared_link Int
+  isActive              Int         @db.TinyInt
+  scoreboard            scoreboard?
+  usedtime              usedtime?
+}
