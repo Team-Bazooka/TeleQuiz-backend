@@ -17,13 +17,22 @@ model admin {
   registered_at DateTime @db.Date
 }
 
+model choice {
+   id            Int      @id @default(autoincrement()) @db.UnsignedInt
+   value         String   @db.VarChar(100)
+   question_id   Int
+   question      question @relation(fields: [id], references: [id], onUpdate: Restrict, map: "choice_question_id_foreign")
+}
+
 model question {
   id       Int       @id @default(autoincrement()) @db.UnsignedInt
   quiz_id  Int
   content  String    @db.VarChar(255)
   language String    @db.VarChar(255)
+  answer   Int
   quiz     quiz      @relation(fields: [id], references: [id], onUpdate: Restrict, map: "question_quiz_id_foreign")
   usedtime usedtime?
+  choice   choice?
 }
 
 model quiz {
