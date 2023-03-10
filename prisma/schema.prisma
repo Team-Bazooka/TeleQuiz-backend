@@ -3,73 +3,49 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model admin {
-  id            Int      @id @default(autoincrement()) @db.UnsignedInt
-  fname         String   @db.VarChar(255)
-  lastname      String   @db.VarChar(255)
-  email         String   @db.VarChar(255)
-  username      String   @db.VarChar(255)
-  password      String   @db.VarChar(255)
+  id            String @id @default(auto()) @map("_id") @db.ObjectId      
+  fname         String   
+  lastname      String   
+  email         String   
+  username      String   
+  password      String   
   registered_at DateTime @db.Date
 }
 
-model choice {
-   id            Int      @id @default(autoincrement()) @db.UnsignedInt
-   value         String   @db.VarChar(100)
-   question_id   Int
-   question      question @relation(fields: [id], references: [id], onUpdate: Restrict, map: "choice_question_id_foreign")
-}
-
-model question {
-  id       Int       @id @default(autoincrement()) @db.UnsignedInt
-  quiz_id  Int
-  content  String    @db.VarChar(255)
-  language String    @db.VarChar(255)
-  answer   Int
-  quiz     quiz      @relation(fields: [id], references: [id], onUpdate: Restrict, map: "question_quiz_id_foreign")
-  usedtime usedtime?
-  choice   choice?
-}
-
 model quiz {
-  id                  Int         @id @default(autoincrement()) @db.UnsignedInt
+  id                  String @id @default(auto()) @map("_id") @db.ObjectId         
   number_of_questions Int
   views               BigInt
-  tag                 String      @db.VarChar(255)
+  tag                 String     
+  language            String 
   created_at          DateTime    @db.Date
-  question            question?
-  scoreboard          scoreboard?
+  questions           Json[]
 }
 
 model scoreboard {
-  id      Int  @id @default(autoincrement()) @db.UnsignedInt
-  user_id Int
+  id      String @id @default(auto()) @map("_id") @db.ObjectId  
+  user_id String 
   point   Int
-  quiz_id Int
-  quiz    quiz @relation(fields: [id], references: [id], onUpdate: Restrict, map: "scoreboard_quiz_id_foreign")
-  user    user @relation(fields: [id], references: [id], onUpdate: Restrict, map: "scoreboard_user_id_foreign")
+  quiz_id String
 }
 
 model usedtime {
-  id          Int      @id @default(autoincrement()) @db.UnsignedInt
-  user_id     Int
-  question_id Int
+  id          String @id @default(auto()) @map("_id") @db.ObjectId      
+  user_id     String 
+  question_id String 
   time        DateTime @db.Date
-  question    question @relation(fields: [id], references: [id], onUpdate: Restrict, map: "usedtime_question_id_foreign")
-  user        user     @relation(fields: [id], references: [id], onUpdate: Restrict, map: "usedtime_user_id_foreign")
 }
 
 model user {
-  id                    Int         @id @default(autoincrement()) @db.UnsignedInt
+  id                    String @id @default(auto()) @map("_id") @db.ObjectId         
   telegram_id           BigInt
-  username              String      @db.VarChar(255)
+  username              String      
   number_of_quiz        Int
   number_of_shared_link Int
-  isActive              Int         @db.TinyInt
-  scoreboard            scoreboard?
-  usedtime              usedtime?
+  isActive              Boolean
 }
