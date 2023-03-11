@@ -3,78 +3,295 @@ const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const adminController = {};
 
+const secret = process.env.JWT_SECRET;
 
-// AddQuizes endpoint
+function stringifyNumbers(obj) {
+  if (typeof obj === "number") {
+    return obj.toString();
+  }
+  if (typeof obj === "bigint") {
+    return obj.toString();
+  } else if (Array.isArray(obj)) {
+    return obj.map(stringifyNumbers);
+  } else if (typeof obj === "object" && obj !== null) {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, stringifyNumbers(value)])
+    );
+  }
+  return obj;
+}
+
+// Done
 adminController.addQuiz = async (req, res) => {
-    const { questions, choices, answers, tag, language } = req.body;
-  
-    if (!questions || !choices || !answers || !tag || !language) {
-      return res.json({
-        success: false,
-        data: null,
-        error: { msg: "Please enter all fields!!" },
+  const { questions, choices, answers, tag, language } = req.body;
+
+  if (!questions || !choices || !answers || !tag || !language) {
+    return res.json({
+      success: false,
+      data: null,
+      error: { msg: "Please enter all fields!!" },
+    });
+  }
+
+  try {
+    let qa = [];
+
+    for (let i = 0; i < questions.length; i++) {
+      qa.push({
+        content: questions[i],
+        choices: choices[i],
+        answer: answers[i],
       });
     }
-  
-    try {
-      let qa = [];
-  
-      for (let i = 0; i < questions.length; i++) {
-        qa.push({
-          content: questions[i],
-          choices: choices[i],
-          answer: answers[i],
-        });
-      }
-  
-      const newQuiz = await prisma.quiz.create({
-        data: {
-          number_of_questions: questions.length,
-          views: 0,
-          tag,
-          language,
-          created_at: new Date(),
-          questions: qa,
-        },
-      });
-  
-      res.json({
-        success: true,
-        data: { ...newQuiz, views: newQuiz.views.toString() },
-        error: null,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.json({
-        success: false,
-        data: null,
-        error: error.meta || { msg: "Error occured check the server log!!" },
-      });
-    }
+
+    const newQuiz = await prisma.quiz.create({
+      data: {
+        number_of_questions: questions.length,
+        views: 0,
+        tag,
+        language,
+        created_at: new Date(),
+        questions: qa,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: { ...newQuiz, views: newQuiz.views.toString() },
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
 };
 
-adminController.loginAdmin = async (req, res) => {}
+// Done
+adminController.getQuiz = async (req, res) => {
+  const { tag } = req.body;
+
+  try {
+    const quizs = await prisma.quiz.findMany({
+      where: { tag: tag },
+    });
+    const data = [];
+    if (quizs.length !== 0) {
+      data = { ...quizs, views: quizs.views.toString() };
+    }
+    res.json({
+      success: true,
+      data: data,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+// Done
+adminController.getQuizes = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const lim = parseInt(limit);
+  const skip = (page - 1) * limit;
+
+  try {
+    const items = await prisma.quiz.findMany({
+      skip,
+      take: lim,
+    });
+
+    const stringifiedData = stringifyNumbers(items);
+
+    res.json({
+      success: true,
+      data: stringifiedData,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+// Done
+adminController.loginAdmin = async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.json({
+      success: false,
+      data: null,
+      error: { msg: "Please enter all fields!!" },
+    });
+  }
+
+  try {
+    const admin = await prisma.admin.findUnique({
+      where: { username },
+    });
+
+    if (!admin) {
+      return res.json({
+        success: false,
+        data: null,
+        error: { msg: "Admin does not exist!!" },
+      });
+    }
+
+    if (admin.password !== password) {
+      return res.json({
+        success: false,
+        data: null,
+        error: { msg: "Incorrect password!!" },
+      });
+    }
+
+    const token = jwt.sign(
+      { username: admin.username, adminId: admin.id },
+      secret,
+      { expiresIn: "1h" }
+    );
+
+    res.json({
+      success: true,
+      data: { accesstoken: token, username: admin.username },
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+// Done
+adminController.addAdmin = async (req, res) => {
+  const { fname, lname, email, username, password } = req.body;
+
+  if (!username || !password || !fname || !lname || !email) {
+    return res.json({
+      success: false,
+      data: null,
+      error: { msg: "Please enter all fields!!" },
+    });
+  }
+
+  try {
+    const admin = await prisma.admin.findUnique({
+      where: { username },
+    });
+
+    if (admin) {
+      return res.json({
+        success: false,
+        data: null,
+        error: { msg: "Admin already exists!!" },
+      });
+    }
+
+    const newAdmin = await prisma.admin.create({
+      data: {
+        fname: fname,
+        lname: lname,
+        email: email,
+        username: username,
+        password: password,
+        registered_at: new Date(),
+      },
+    });
+
+    res.json({
+      success: true,
+      data: newAdmin,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+// Done
+adminController.getUsers = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const lim = parseInt(limit);
+  const skip = (page - 1) * limit;
+
+  try {
+    const users = await prisma.user.findMany({
+      skip,
+      take: lim,
+    });
+
+    res.json({
+      success: true,
+      data: users,
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
 
 
-adminController.addAdmin = async (req, res) => {}
+adminController.getStats = async (req, res) => {};
 
+adminController.updateQuiz = async (req, res) => {};
 
-adminController.addQuiz = async (req, res) => {}
+adminController.patchQuiz = async (req, res) => {};
 
+// Done
+adminController.deleteQuiz = async (req, res) => {
+  const { tag } = req.body;
+  try {
+    const deletedRecord = await client.quiz.delete({
+      where: {
+        tag: tag,
+      },
+    });
 
-adminController.getUsers = async (req, res) => {}
+    console.log(`Deleted record: ${JSON.stringify(deletedRecord)}`);
 
+    res.json({
+      success: true,
+      data: { deletedRecord: deletedRecord },
+      error: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
 
-adminController.getStats = async (req, res) => {}
-
-
-adminController.updateQuiz = async (req, res) => {}
-
-
-adminController.deleteQuiz = async (req, res) => {}
-
-
-adminController.getScoreboard = async (req, res) => {}
-
+adminController.getScoreboard = async (req, res) => {};
 
 module.exports = adminController;
