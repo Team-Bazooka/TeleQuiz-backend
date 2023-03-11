@@ -21,7 +21,9 @@ model quiz {
   id                  String @id @default(auto()) @map("_id") @db.ObjectId         
   number_of_questions Int
   views               BigInt
-  tag                 String     
+  title               String
+  description         String
+  tags                String[]     
   language            String 
   created_at          DateTime    @db.Date
   questions           Json[]

@@ -23,9 +23,9 @@ function stringifyNumbers(obj) {
 
 // Done
 adminController.addQuiz = async (req, res) => {
-  const { questions, choices, answers, tag, language } = req.body;
+  const { questions, choices, answers, tags, language, title, description } = req.body;
 
-  if (!questions || !choices || !answers || !tag || !language) {
+  if (!questions || !choices || !answers || !tags || !language) {
     return res.json({
       success: false,
       data: null,
@@ -48,8 +48,10 @@ adminController.addQuiz = async (req, res) => {
       data: {
         number_of_questions: questions.length,
         views: 0,
-        tag,
+        tags,
         language,
+        title,
+        description,
         created_at: new Date(),
         questions: qa,
       },

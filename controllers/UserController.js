@@ -133,13 +133,15 @@ userController.getQuiz = async (req, res) => {
     });
 
     const quizs = await prisma.quiz.findMany({
-      where: { tag: tag },
+      where: {},
     });
 
     let ids = [];
 
     quizs.map((q) => {
-      ids = [...ids, q.id];
+      if(q.tags.indexOf(tag) > -1){
+         ids = [...ids, q.id];
+      }
     });
 
     if (user[0]) {
