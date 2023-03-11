@@ -49,3 +49,4 @@ model user {
   number_of_shared_link Int
   isActive              Boolean
 }
+
