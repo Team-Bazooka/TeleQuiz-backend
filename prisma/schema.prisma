@@ -37,8 +37,10 @@ model scoreboard {
 model usedtime {
   id          String @id @default(auto()) @map("_id") @db.ObjectId      
   user_id     String 
-  question_id String 
-  time        DateTime @db.Date
+  question_id Int
+  quiz_id     String 
+  isCorrect   Boolean
+  time        Float
 }
 
 model user {

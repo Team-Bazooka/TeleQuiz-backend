@@ -3,9 +3,9 @@ const userController = {};
 const prisma = new PrismaClient();
 
 userController.submitQuiz = async (req, res) => {
-  const { telegram_id, point, quiz_id } = req.body;
+  const { telegram_id, points, quiz_id } = req.body;
 
-  if (!telegram_id || !point || !quiz_id) {
+  if (!telegram_id || !points || !quiz_id) {
     return res.json({
       success: false,
       data: null,
@@ -20,7 +20,23 @@ userController.submitQuiz = async (req, res) => {
       }
     })
 
-    const score = await prisma.scoreboard.create({
+    let point = 0;
+
+    // storing each answer in the DB
+    points.map(async p => {
+      point = point + ((100 * p[1]) + ((30 - p[0])*50))
+      await prisma.usedtime.create({
+        data: {
+          user_id: u[0].id,
+          question_id: p[2],
+          quiz_id,
+          isCorrect: p[1] === 0 ? false : true,
+          time: p[0]
+        }
+      })
+    })
+
+    await prisma.scoreboard.create({
       data: {
         user_id: u[0].id,
         point,
@@ -85,7 +101,7 @@ userController.register = async (req, res) => {
 userController.getQuiz = async (req, res) => {
   const { telegram_id, username, tag } = req.body;
 
-  if (!telegram_id || !tag || !username) {
+  if (!telegram_id || !tag) {
     return res.json({ msg: "Please enter all fields!!" });
   }
 
