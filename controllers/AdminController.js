@@ -286,7 +286,43 @@ adminController.getUsers = async (req, res) => {
   }
 };
 
-adminController.getStats = async (req, res) => {};
+adminController.getStats = async (req, res) => {
+
+  try {
+    const quizes = await prisma.quiz.findMany({
+      where: {}
+    })
+
+    const users = await prisma.user.findMany({
+      where: {}
+    })
+
+    const admins = await prisma.admin.findMany({
+      where: {}
+    })
+
+    res.json({
+      success: true,
+      data: {
+        total_quiz: quizes.length,
+        total_user: users.length,
+        total_admins: admins.length
+      }
+    })
+
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+adminController.getUserStats = async (req, res) => {
+  
+}
 
 adminController.updateQuiz = async (req, res) => {};
 

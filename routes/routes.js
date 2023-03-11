@@ -23,7 +23,7 @@ router.get("/quiz/get", userController.getQuiz);
 router.post("/quiz/submit", userController.submitQuiz);
   
 // Admin routes
-router.post("/admin/login",authenticateAdmin, adminController.loginAdmin);
+router.post("/admin/login", adminController.loginAdmin);
 router.post("/admin/register", authenticateAdmin, adminController.addAdmin);
 
 // Admin Quiz routes
@@ -39,6 +39,7 @@ router.patch("/admin/quiz", authenticateAdmin, adminController.patchQuiz);
 
 // Admin Stats routes
 router.get("/admin/stats", authenticateAdmin, adminController.getStats);
+router.get("/admin/user/stats/:id", adminController.getUserStats);
 router.get("/admin/users", authenticateAdmin, adminController.getUsers);
 router.get("/admin/scoreboard/:id", adminController.getScoreboard);
 
