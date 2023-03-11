@@ -6,6 +6,7 @@
 
 base url : https://telequiz-backend.onrender.com
 
+
 | Endpoint   | Request type | Body/Params                                       | Response     | Route          |
 |------------|--------------|---------------------------------------------------|--------------|----------------|
 | AddQuiz    | POST         | Body: { questions,choices, answers,tag,language } | quize {}     | /api/quize/add |

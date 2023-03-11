@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const adminController = {};
 
 const secret = process.env.JWT_SECRET;
@@ -23,9 +24,18 @@ function stringifyNumbers(obj) {
 
 // Done
 adminController.addQuiz = async (req, res) => {
-  const { questions, choices, answers, tags, language, title, description } = req.body;
+  const { questions, choices, answers, tags, language, title, description } =
+    req.body;
 
-  if (!questions || !choices || !answers || !tags || !language) {
+  if (
+    !questions ||
+    !choices ||
+    !answers ||
+    !tags ||
+    !language ||
+    !title ||
+    !description
+  ) {
     return res.json({
       success: false,
       data: null,
@@ -78,11 +88,15 @@ adminController.getQuiz = async (req, res) => {
 
   try {
     const quizs = await prisma.quiz.findMany({
-      where: { tag: tag },
+      where: {},
     });
-    const data = [];
+    let data = [];
     if (quizs.length !== 0) {
-      data = { ...quizs, views: quizs.views.toString() };
+      quizs.map(q => {
+        if(q.tags.indexOf(tag) > -1){
+          data = [...data, {...q,views: q.views.toString()} ];
+        }
+      })
     }
     res.json({
       success: true,
@@ -153,24 +167,28 @@ adminController.loginAdmin = async (req, res) => {
       });
     }
 
-    if (admin.password !== password) {
-      return res.json({
-        success: false,
-        data: null,
-        error: { msg: "Incorrect password!!" },
-      });
-    }
+    bcrypt.compare(password, admin.password).then((result) => {
+      if (result) {
+        const token = jwt.sign(
+          { username: admin.username, adminId: admin.id },
+          secret,
+          { expiresIn: "1h" }
+        );
 
-    const token = jwt.sign(
-      { username: admin.username, adminId: admin.id },
-      secret,
-      { expiresIn: "1h" }
-    );
-
-    res.json({
-      success: true,
-      data: { accesstoken: token, username: admin.username },
-      error: null,
+        res.json({
+          success: true,
+          data: { accesstoken: token, username: admin.username },
+          error: null,
+        });
+      }else {
+        return res.json({
+          success: false,
+          data: null,
+          error: {
+             msg: "Invalid email or password!!"
+          }
+        })
+      }
     });
   } catch (error) {
     console.log(error);
@@ -207,20 +225,22 @@ adminController.addAdmin = async (req, res) => {
       });
     }
 
-    const newAdmin = await prisma.admin.create({
+    let pwd = bcrypt.hashSync(password, 8);
+
+    await prisma.admin.create({
       data: {
         fname: fname,
         lname: lname,
         email: email,
         username: username,
-        password: password,
+        password: pwd,
         registered_at: new Date(),
       },
     });
 
     res.json({
       success: true,
-      data: newAdmin,
+      data: { fname, lname, email, username },
       error: null,
     });
   } catch (error) {
@@ -259,7 +279,6 @@ adminController.getUsers = async (req, res) => {
     });
   }
 };
-
 
 adminController.getStats = async (req, res) => {};
 

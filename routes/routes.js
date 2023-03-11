@@ -23,13 +23,13 @@ router.get("/quiz/get", userController.getQuiz);
 router.post("/quiz/submit", userController.submitQuiz);
   
 // Admin routes
-router.post("/admin/login", adminController.loginAdmin);
+router.post("/admin/login",authenticateAdmin, adminController.loginAdmin);
 router.post("/admin/register", authenticateAdmin, adminController.addAdmin);
 
 // Admin Quiz routes
 router.get("/admin/quizes", authenticateAdmin, adminController.getQuizes);
 router.get("/admin/quiz", authenticateAdmin, adminController.getQuiz);
-router.post("/admin/quiz", authenticateAdmin, adminController.addQuiz);
+router.post("/admin/quiz", adminController.addQuiz);
 router.put ("/admin/quiz", authenticateAdmin, adminController.updateQuiz);
 router.patch("/admin/quiz", authenticateAdmin, adminController.patchQuiz);
 router.delete("/admin/quiz", authenticateAdmin, adminController.deleteQuiz);

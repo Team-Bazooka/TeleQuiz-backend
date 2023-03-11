@@ -68,7 +68,7 @@ userController.submitQuiz = async (req, res) => {
 };
 
 userController.register = async (req, res) => {
-  const { telegram_id, username } = req.body;
+  const { telegram_id, username, ref_id } = req.body;
 
   if (!telegram_id) {
     return res.json({
@@ -92,6 +92,18 @@ userController.register = async (req, res) => {
         error: { msg: "User already exists!!" },
       });
     } else {
+      if(ref_id){
+        await prisma.user.updateMany({
+          where: {
+            telegram_id: ref_id
+          },
+          data:{ 
+            number_of_shared_link: {
+              increment: 1
+            }
+          }
+        })
+      }
       const newUser = await prisma.user.create({
         data: {
           telegram_id,
