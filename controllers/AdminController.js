@@ -177,7 +177,7 @@ adminController.loginAdmin = async (req, res) => {
 
         res.json({
           success: true,
-          data: { accesstoken: token, username: admin.username },
+          data: { accesstoken: token, username: admin.username, email: admin.email, fname: admin.fname, lname: admin.lname },
           error: null,
         });
       }else {
@@ -321,7 +321,47 @@ adminController.getStats = async (req, res) => {
 };
 
 adminController.getUserStats = async (req, res) => {
-  
+  const id = req.params.id;
+
+  if (!id) {
+    return res.json({
+      success: false,
+      data: null,
+      error: {
+        msg: "Please enter all fields!!",
+      },
+    });
+  }
+
+  try {
+    res.json({
+      success: true,
+      data: {
+        quiz: {
+          tags: {
+            science: 0,
+            technology: 0,
+            history: 0,
+            sport: 0
+          },
+          highscore: {
+            point: 0,
+            quiz_title: ""
+          },
+          total_time_spent: 0
+        }
+      },
+      error: null
+    })
+
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
 }
 
 adminController.updateQuiz = async (req, res) => {};
