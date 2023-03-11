@@ -40,7 +40,7 @@ router.patch("/admin/quiz", authenticateAdmin, adminController.patchQuiz);
 // Admin Stats routes
 router.get("/admin/stats", authenticateAdmin, adminController.getStats);
 router.get("/admin/users", authenticateAdmin, adminController.getUsers);
-router.get("/admin/scoreboard", authenticateAdmin, adminController.getScoreboard);
+router.get("/admin/scoreboard/:id", adminController.getScoreboard);
 
 
 

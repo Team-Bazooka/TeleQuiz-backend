@@ -329,6 +329,38 @@ adminController.deleteQuiz = async (req, res) => {
 };
 
 
-adminController.getScoreboard = async (req, res) => {};
+adminController.getScoreboard = async (req, res) => {
+  const quiz_id = req.params.id;
+
+  if(!quiz_id){
+    return res.json({
+      success: false,
+      data: null,
+      error: {
+        msg: "Please enter all fields!!",
+      },
+    });
+  }
+  
+  try {
+    const board = await prisma.scoreboard.findMany({
+      where: { quiz_id }
+    })
+
+    res.json({
+      success: true,
+      data: board,
+      error: null
+    })
+
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
 
 module.exports = adminController;
