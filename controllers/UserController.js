@@ -16,47 +16,47 @@ userController.submitQuiz = async (req, res) => {
   try {
     const u = await prisma.user.findMany({
       where: {
-        telegram_id
-      }
-    })
+        telegram_id,
+      },
+    });
 
     let point = 0;
 
     // storing each answer in the DB
-    points.map(async p => {
-      point = point + ((100 * p[1]) + ((30 - p[0])*50))
+    points.map(async (p) => {
+      point = point + (100 * p[1] + (30 - p[0]) * 50);
       await prisma.usedtime.create({
         data: {
           user_id: u[0].id,
           question_id: p[2],
           quiz_id,
           isCorrect: p[1] === 0 ? false : true,
-          time: p[0]
-        }
-      })
-    })
+          time: p[0],
+        },
+      });
+    });
 
     await prisma.scoreboard.create({
       data: {
         user_id: u[0].id,
         point,
-        quiz_id
-      }
-    })
+        quiz_id,
+      },
+    });
 
     const scores = await prisma.scoreboard.findMany({
       where: {
-        quiz_id
-      }
-    })
+        quiz_id,
+      },
+    });
 
     scores.sort();
 
     res.json({
       success: true,
       data: scores,
-      error: null
-    })
+      error: null,
+    });
   } catch (error) {
     console.log(error);
     return res.json({
@@ -68,9 +68,9 @@ userController.submitQuiz = async (req, res) => {
 };
 
 userController.register = async (req, res) => {
-  const { telegram_id, name } = req.body;
+  const { telegram_id, username } = req.body;
 
-  if (!telegram_id || !name ) {
+  if (!telegram_id) {
     return res.json({
       success: false,
       data: null,
@@ -81,12 +81,33 @@ userController.register = async (req, res) => {
   try {
     const u = await prisma.user.findMany({
       where: {
-        telegram_id
-      }
-    })
+        telegram_id,
+      },
+    });
 
-    console.log(u);
-    
+    if (u[0]) {
+      return res.json({
+        sucess: false,
+        data: null,
+        error: { msg: "User already exists!!" },
+      });
+    } else {
+      const newUser = await prisma.user.create({
+        data: {
+          telegram_id,
+          username: username ? username : "",
+          number_of_quiz: 0,
+          number_of_shared_link: 0,
+          isActive: true,
+        },
+      });
+
+      res.json({
+        sucess: true,
+        data:  {...newUser, telegram_id: newUser.telegram_id.toString() },
+        error: null
+      })
+    }
   } catch (error) {
     console.log(error);
     return res.json({
@@ -95,8 +116,7 @@ userController.register = async (req, res) => {
       error: error.meta || { msg: "Error occured check the server log!!" },
     });
   }
-
-}
+};
 
 userController.getQuiz = async (req, res) => {
   const { telegram_id, username, tag } = req.body;
@@ -125,13 +145,13 @@ userController.getQuiz = async (req, res) => {
     if (user[0]) {
       const s = await prisma.scoreboard.findMany({
         where: {
-          user_id: user[0].id
+          user_id: user[0].id,
         },
       });
 
-      s.map(sb => {
-        ids.indexOf(sb.id) > - 1 ? ids.pop(sb.id) : null;
-      })
+      s.map((sb) => {
+        ids.indexOf(sb.id) > -1 ? ids.pop(sb.id) : null;
+      });
     } else {
       await prisma.user.create({
         data: {
@@ -148,13 +168,13 @@ userController.getQuiz = async (req, res) => {
 
     const q = await prisma.quiz.findMany({
       where: {
-        id: random
+        id: random,
       },
     });
 
     res.json({
       success: true,
-      data: { ...q[0], views: q[0].views.toString()},
+      data: { ...q[0], views: q[0].views.toString() },
       error: null,
     });
   } catch (error) {
