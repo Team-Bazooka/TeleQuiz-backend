@@ -44,6 +44,18 @@ userController.submitQuiz = async (req, res) => {
       },
     });
 
+    await prisma.user.updateMany({
+      where: {
+        telegram_id
+      },
+
+      data: {
+        number_of_quiz: {
+          increment: 1
+        }
+      }
+    })
+
     const scores = await prisma.scoreboard.findMany({
       where: {
         quiz_id,

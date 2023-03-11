@@ -265,9 +265,15 @@ adminController.getUsers = async (req, res) => {
       take: lim,
     });
 
+    let data = []
+
+    users.map(u => {
+      data = [...data, {...u, telegram_id: u.telegram_id.toString()}]
+    })
+
     res.json({
       success: true,
-      data: users,
+      data: data,
       error: null,
     });
   } catch (error) {
@@ -288,19 +294,28 @@ adminController.patchQuiz = async (req, res) => {};
 
 // Done
 adminController.deleteQuiz = async (req, res) => {
-  const { tag } = req.body;
+  const id = req.params.id;
+
+  if (!id) {
+    return res.json({
+      success: false,
+      data: null,
+      error: {
+        msg: "Please enter all fields!!",
+      },
+    });
+  }
+
   try {
-    const deletedRecord = await client.quiz.delete({
+    await prisma.quiz.delete({
       where: {
-        tag: tag,
+        id
       },
     });
 
-    console.log(`Deleted record: ${JSON.stringify(deletedRecord)}`);
-
     res.json({
       success: true,
-      data: { deletedRecord: deletedRecord },
+      data: { msg: "Done!!" },
       error: null,
     });
   } catch (error) {
@@ -312,6 +327,7 @@ adminController.deleteQuiz = async (req, res) => {
     });
   }
 };
+
 
 adminController.getScoreboard = async (req, res) => {};
 

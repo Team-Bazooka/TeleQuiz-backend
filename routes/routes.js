@@ -29,10 +29,13 @@ router.post("/admin/register", authenticateAdmin, adminController.addAdmin);
 // Admin Quiz routes
 router.get("/admin/quizes", authenticateAdmin, adminController.getQuizes);
 router.get("/admin/quiz", authenticateAdmin, adminController.getQuiz);
-router.post("/admin/quiz", adminController.addQuiz);
+router.post("/admin/quiz", authenticateAdmin, adminController.addQuiz);
+router.delete("/admin/quiz/:id", authenticateAdmin, adminController.deleteQuiz);
+
+// not tested
 router.put ("/admin/quiz", authenticateAdmin, adminController.updateQuiz);
 router.patch("/admin/quiz", authenticateAdmin, adminController.patchQuiz);
-router.delete("/admin/quiz", authenticateAdmin, adminController.deleteQuiz);
+
 
 // Admin Stats routes
 router.get("/admin/stats", authenticateAdmin, adminController.getStats);
