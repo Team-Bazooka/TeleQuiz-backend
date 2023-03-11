@@ -10,9 +10,9 @@ datasource db {
 model admin {
   id            String @id @default(auto()) @map("_id") @db.ObjectId      
   fname         String   
-  lastname      String   
+  lname         String
   email         String   
-  username      String   
+  username      String  @unique  
   password      String   
   registered_at DateTime @db.Date
 }
