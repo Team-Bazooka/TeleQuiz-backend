@@ -2,6 +2,12 @@ const { PrismaClient } = require("@prisma/client");
 const userController = {};
 const prisma = new PrismaClient();
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 userController.submitQuiz = async (req, res) => {
   const { telegram_id, points, quiz_id } = req.body;
 
@@ -64,14 +70,18 @@ userController.submitQuiz = async (req, res) => {
       });
 
       let vals = [];
-    
-      scores.map(score => {
-        vals = [...vals, score.point]
-      })
+
+      scores.map((score) => {
+        vals = [...vals, score.point];
+      });
 
       res.json({
         success: true,
-        data: { rank: (vals.indexOf(point) + 1), point: point, number_of_shared_link: u[0].number_of_shared_link },
+        data: {
+          rank: vals.indexOf(point) + 1,
+          point: point,
+          number_of_shared_link: u[0].number_of_shared_link,
+        },
         error: null,
       });
     } else {
@@ -216,13 +226,88 @@ userController.getQuiz = async (req, res) => {
         data: { ...q[0], views: q[0].views.toString() },
         error: null,
       });
-    }else{
+    } else {
       return res.json({
         success: false,
         data: null,
         error: { msg: "User is banned!!" },
       });
     }
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+};
+
+userController.getUserProfile = async (req, res) => {
+  const telegram_id = parseInt(req.params.id);
+
+  if (!telegram_id) {
+    return res.json({
+      success: false,
+      data: null,
+      error: {
+        msg: "Please enter all fields!!",
+      },
+    });
+  }
+  try {
+    const u = await prisma.user.findMany({
+      where: {
+        telegram_id,
+      },
+    });
+
+    const us = await prisma.user.findMany({
+      where: {},
+    });
+
+    let vals = [];
+    let pt = 0;
+
+    us.map(async (uss) => {
+      const board = await prisma.scoreboard.findMany({
+        where: {
+          user_id: uss.id,
+        },
+      });
+
+      let point = 0;
+      board.map((b) => {
+        point = point + b.point;
+      });
+
+      if(uss.id == u[0].id){
+        pt = point;
+      }
+
+      vals = [...vals, [uss.number_of_shared_link, point]];
+    });
+
+    await sleep(2000);
+
+    vals.sort();
+    vals.reverse();
+    
+    let index = 0;
+
+    vals.map((v)=> {
+      if(v[1] === pt && v[0] === u[0].number_of_shared_link){
+        index = vals.indexOf(v) + 1
+      }
+    })
+
+    await sleep(2000);
+    res.json({
+      sucess: true,
+      data: { rank: index, points: pt, number_of_shared_link: u[0].number_of_shared_link },
+      error: null
+    })
+
   } catch (error) {
     console.log(error);
     return res.json({

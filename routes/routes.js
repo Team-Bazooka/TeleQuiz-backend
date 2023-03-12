@@ -20,6 +20,7 @@ const authenticateAdmin = (req, res, next) => {
 // User routes
 router.post("/user/register", userController.register);
 router.get("/quiz/get", userController.getQuiz);
+router.get("/user/:id", userController.getUserProfile);
 router.post("/quiz/submit", userController.submitQuiz);
   
 // Admin routes
