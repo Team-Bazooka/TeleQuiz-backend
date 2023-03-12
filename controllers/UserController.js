@@ -20,55 +20,63 @@ userController.submitQuiz = async (req, res) => {
       },
     });
 
-    let point = 0;
+    if (u[0].isActive) {
+      let point = 0;
 
-    // storing each answer in the DB
-    points.map(async (p) => {
-      point = point + (100 * p[1] + (30 - p[0]) * 50);
-      await prisma.usedtime.create({
+      // storing each answer in the DB
+      points.map(async (p) => {
+        point = point + (100 * p[1] + (30 - p[0]) * 50);
+        await prisma.usedtime.create({
+          data: {
+            user_id: u[0].id,
+            question_id: p[2],
+            quiz_id,
+            isCorrect: p[1] === 0 ? false : true,
+            time: p[0],
+          },
+        });
+      });
+
+      await prisma.scoreboard.create({
         data: {
           user_id: u[0].id,
-          question_id: p[2],
+          point,
           quiz_id,
-          isCorrect: p[1] === 0 ? false : true,
-          time: p[0],
         },
       });
-    });
 
-    await prisma.scoreboard.create({
-      data: {
-        user_id: u[0].id,
-        point,
-        quiz_id,
-      },
-    });
+      await prisma.user.updateMany({
+        where: {
+          telegram_id,
+        },
 
-    await prisma.user.updateMany({
-      where: {
-        telegram_id
-      },
+        data: {
+          number_of_quiz: {
+            increment: 1,
+          },
+        },
+      });
 
-      data: {
-        number_of_quiz: {
-          increment: 1
-        }
-      }
-    })
+      const scores = await prisma.scoreboard.findMany({
+        where: {
+          quiz_id,
+        },
+      });
 
-    const scores = await prisma.scoreboard.findMany({
-      where: {
-        quiz_id,
-      },
-    });
+      scores.sort();
 
-    scores.sort();
-
-    res.json({
-      success: true,
-      data: scores,
-      error: null,
-    });
+      res.json({
+        success: true,
+        data: scores,
+        error: null,
+      });
+    } else {
+      return res.json({
+        success: false,
+        data: null,
+        error: { msg: "User is banned!!" },
+      });
+    }
   } catch (error) {
     console.log(error);
     return res.json({
@@ -104,17 +112,17 @@ userController.register = async (req, res) => {
         error: { msg: "User already exists!!" },
       });
     } else {
-      if(ref_id){
+      if (ref_id) {
         await prisma.user.updateMany({
           where: {
-            telegram_id: ref_id
+            telegram_id: ref_id,
           },
-          data:{ 
+          data: {
             number_of_shared_link: {
-              increment: 1
-            }
-          }
-        })
+              increment: 1,
+            },
+          },
+        });
       }
       const newUser = await prisma.user.create({
         data: {
@@ -128,9 +136,9 @@ userController.register = async (req, res) => {
 
       res.json({
         sucess: true,
-        data:  {...newUser, telegram_id: newUser.telegram_id.toString() },
-        error: null
-      })
+        data: { ...newUser, telegram_id: newUser.telegram_id.toString() },
+        error: null,
+      });
     }
   } catch (error) {
     console.log(error);
@@ -156,53 +164,61 @@ userController.getQuiz = async (req, res) => {
       },
     });
 
-    const quizs = await prisma.quiz.findMany({
-      where: {},
-    });
+    if (user[0].isActive) {
+      const quizs = await prisma.quiz.findMany({
+        where: {},
+      });
 
-    let ids = [];
+      let ids = [];
 
-    quizs.map((q) => {
-      if(q.tags.indexOf(tag) > -1){
-         ids = [...ids, q.id];
+      quizs.map((q) => {
+        if (q.tags.indexOf(tag) > -1) {
+          ids = [...ids, q.id];
+        }
+      });
+
+      if (user[0]) {
+        const s = await prisma.scoreboard.findMany({
+          where: {
+            user_id: user[0].id,
+          },
+        });
+
+        s.map((sb) => {
+          ids.indexOf(sb.id) > -1 ? ids.pop(sb.id) : null;
+        });
+      } else {
+        await prisma.user.create({
+          data: {
+            telegram_id,
+            username,
+            number_of_quiz: 0,
+            number_of_shared_link: 0,
+            isActive: true,
+          },
+        });
       }
-    });
 
-    if (user[0]) {
-      const s = await prisma.scoreboard.findMany({
+      let random = ids[Math.floor(Math.random() * ids.length)];
+
+      const q = await prisma.quiz.findMany({
         where: {
-          user_id: user[0].id,
+          id: random,
         },
       });
 
-      s.map((sb) => {
-        ids.indexOf(sb.id) > -1 ? ids.pop(sb.id) : null;
+      res.json({
+        success: true,
+        data: { ...q[0], views: q[0].views.toString() },
+        error: null,
       });
-    } else {
-      await prisma.user.create({
-        data: {
-          telegram_id,
-          username,
-          number_of_quiz: 0,
-          number_of_shared_link: 0,
-          isActive: true,
-        },
+    }else{
+      return res.json({
+        success: false,
+        data: null,
+        error: { msg: "User is banned!!" },
       });
     }
-
-    let random = ids[Math.floor(Math.random() * ids.length)];
-
-    const q = await prisma.quiz.findMany({
-      where: {
-        id: random,
-      },
-    });
-
-    res.json({
-      success: true,
-      data: { ...q[0], views: q[0].views.toString() },
-      error: null,
-    });
   } catch (error) {
     console.log(error);
     return res.json({

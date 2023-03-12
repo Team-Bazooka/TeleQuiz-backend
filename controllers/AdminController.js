@@ -439,4 +439,42 @@ adminController.getScoreboard = async (req, res) => {
   }
 };
 
+adminController.banUser = async(req, res) => {
+  const user_id = req.params.id;
+
+  if(!user_id){
+    return res.json({
+      success: false,
+      data: null,
+      error: {
+        msg: "Please enter all fields!!",
+      },
+    });
+  }  
+
+  try {
+    await prisma.user.updateMany({
+      where: {
+        id: user_id
+      },
+      data: {
+        isActive: false
+      }
+    })
+
+    res.json({
+      sucess: true,
+      data: { msg: "Done!!"},
+      error: null
+    })
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+}
+
 module.exports = adminController;

@@ -43,6 +43,7 @@ router.get("/admin/user/stats/:id", adminController.getUserStats);
 router.get("/admin/users", authenticateAdmin, adminController.getUsers);
 router.get("/admin/scoreboard/:id", adminController.getScoreboard);
 
+router.put("/admin/ban/:id", adminController.banUser);
 
 
 // Export the router
