@@ -63,11 +63,15 @@ userController.submitQuiz = async (req, res) => {
         },
       });
 
-      scores.sort();
+      let vals = [];
+    
+      scores.map(score => {
+        vals = [...vals, score.point]
+      })
 
       res.json({
         success: true,
-        data: scores,
+        data: { rank: (vals.indexOf(point) + 1), point: point, number_of_shared_link: u[0].number_of_shared_link },
         error: null,
       });
     } else {
