@@ -334,21 +334,70 @@ adminController.getUserStats = async (req, res) => {
   }
 
   try {
+
+    const taken_quizes = await prisma.scoreboard.findMany({
+      where: {
+        user_id: id
+      }
+    })
+
+    let total_time_spent = 0;
+    let hs = 0;
+    let tags_taken = [0,0,0,0];
+
+
+    taken_quizes.map(async q => {
+
+      // calculating high score
+      if(q.point > hs){
+        hs = q.point;
+      }
+
+      // calculating total time spent
+      const scores = await prisma.usedtime.findMany({
+        where: {
+         user_id: id
+        }
+      })
+
+      scores.map(ss => {
+        console.log(ss.time);
+      })
+
+      // calculating each number of tag played
+      const qs = await prisma.quiz.findMany({
+        where: {
+          id: q.id
+        }
+      })
+
+      if(qs[0].tags.indexOf("science") > -1){
+        tags_taken[0]++;
+      }else if(qs[0].tags.indexOf("sport") > -1){
+        tags_taken[1]++;
+      }else if(qs[0].tags.indexOf("technology") > -1){
+        tags_taken[2]++;
+      }else if(qs[0].tags.indexOf("history") > -1){
+        tags_taken[3]++;
+      }
+
+    })
+
+  
     res.json({
       success: true,
       data: {
         quiz: {
           tags: {
-            science: 0,
-            technology: 0,
-            history: 0,
-            sport: 0
+            science: tags_taken[0],
+            technology: tags_taken[1],
+            history: tags_taken[2],
+            sport: tags_taken[3]
           },
           highscore: {
-            point: 0,
-            quiz_title: ""
+            point: hs
           },
-          total_time_spent: 0
+          total_time_spent: total_time_spent
         }
       },
       error: null
