@@ -28,10 +28,12 @@ userController.submitQuiz = async (req, res) => {
 
     if (u[0].isActive) {
       let point = 0;
-
+      let total_time = 0;
       // storing each answer in the DB
       points.map(async (p) => {
         point = point + (100 * p[1] + (30 - p[0]) * 50);
+        total_time = total_time + p[0];
+
         await prisma.usedtime.create({
           data: {
             user_id: u[0].id,
@@ -60,6 +62,10 @@ userController.submitQuiz = async (req, res) => {
           number_of_quiz: {
             increment: 1,
           },
+          total_time_spent: {
+            increment: total_time
+          },
+          tags_taken
         },
       });
 
@@ -317,5 +323,35 @@ userController.getUserProfile = async (req, res) => {
     });
   }
 };
+
+userController.getTags = async(req, res) => {
+  console.log("called");
+  try {
+    const quizes = await prisma.quiz.findMany({
+      where: {}
+    }).then(result => {
+      let tags = new Set();
+
+      result.map(q => {
+        tags.add(...q.tags);
+      })
+  
+      res.json({
+        success: true,
+        data: [...tags],
+        error: null
+      })
+    })
+
+ 
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      data: null,
+      error: error.meta || { msg: "Error occured check the server log!!" },
+    });
+  }
+}
 
 module.exports = userController;

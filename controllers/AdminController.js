@@ -6,6 +6,12 @@ const adminController = {};
 
 const secret = process.env.JWT_SECRET;
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 function stringifyNumbers(obj) {
   if (typeof obj === "number") {
     return obj.toString();
@@ -171,8 +177,7 @@ adminController.loginAdmin = async (req, res) => {
       if (result) {
         const token = jwt.sign(
           { username: admin.username, adminId: admin.id },
-          secret,
-          { expiresIn: "1h" }
+          secret
         );
 
         res.json({
@@ -361,32 +366,33 @@ adminController.getUserStats = async (req, res) => {
         },
       });
 
+      await sleep(4000);
+
       scores.map((ss) => {
-        total_time_spent = total_time_spent + ss.id
+        total_time_spent = total_time_spent + ss.time;
       });
 
-      console.log(total_time_spent);
       // calculating each number of tag played
-      // const qs = await prisma.quiz
-      //   .findMany({
-      //     where: {
-      //       id: q.id,
-      //     },
-      //   })
-      //   .then((data) => {
-      //     console.log(data);
-      //     // if (data[0].tags.indexOf("science") > -1) {
-      //     //   tags_taken[0]++;
-      //     // } else if (qs[0].tags.indexOf("sport") > -1) {
-      //     //   tags_taken[1]++;
-      //     // } else if (qs[0].tags.indexOf("technology") > -1) {
-      //     //   tags_taken[2]++;
-      //     // } else if (qs[0].tags.indexOf("history") > -1) {
-      //     //   tags_taken[3]++;
-      //     // }
-      //   });
+      const qs = await prisma.quiz.findMany({
+        where: {
+          id: q.quiz_id,
+        },
+      });
+
+      await sleep(8000);
+      console.log(qs);
+      // if (qs[0].tags.indexOf("science") > -1) {
+      //   tags_taken[0]++;
+      // } else if (qs[0].tags.indexOf("sport") > -1) {
+      //   tags_taken[1]++;
+      // } else if (qs[0].tags.indexOf("technology") > -1) {
+      //   tags_taken[2]++;
+      // } else if (qs[0].tags.indexOf("history") > -1) {
+      //   tags_taken[3]++;
+      // }
     });
 
+    await sleep(8000);
     res.json({
       success: true,
       data: {
