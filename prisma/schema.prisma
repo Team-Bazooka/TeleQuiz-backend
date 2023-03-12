@@ -52,7 +52,5 @@ model user {
   number_of_quiz        Int
   number_of_shared_link Int
   isActive              Boolean
-  total_time_spent      Int
-  tags_taken            Json[]
 }
 
